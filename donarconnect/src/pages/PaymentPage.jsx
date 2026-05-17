@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useOrder } from '../hooks/useOrderForm';
+import { useOrder } from '../hooks/useOrderForm.jsx';
 import { submitOrder, generateOrderId } from '../utils/api';
 import { openRazorpay } from '../utils/razorpay';
 import StepBar from '../components/StepBar';

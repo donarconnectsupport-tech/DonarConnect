@@ -1,6 +1,6 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { OrderProvider } from './hooks/useOrderForm'
+import { OrderProvider } from './hooks/useOrderForm.jsx'
 import HomePage from './pages/HomePage'
 import PersonalDetailsPage from './pages/PersonalDetailsPage'
 import OrderPage from './pages/OrderPage'

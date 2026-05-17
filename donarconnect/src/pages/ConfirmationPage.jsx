@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useOrder } from '../hooks/useOrderForm';
+import { useOrder } from '../hooks/useOrderForm.jsx';
 import './ConfirmationPage.css';
 
 export default function ConfirmationPage() {
