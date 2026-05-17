@@ -1,0 +1,21 @@
+.form-title    { margin-top: 4px; }
+.form-subtitle { color: var(--text-muted); font-size: 14px; margin-top: 6px; }
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.sticky-cta {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--max-w);
+  padding: 14px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 50;
+}
