@@ -39,7 +39,7 @@ export default function HomePage() {
           <div className="hero-img" aria-hidden="true">
             {/* Replace profile SVG with hero image. Place the provided image at `public/hero.jpg` */}
             <img
-              src="/hero.jpg"
+              src="/homeimg.jpeg"
               alt="Donor"
               className="hero-photo"
               onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo192.svg'; }}
