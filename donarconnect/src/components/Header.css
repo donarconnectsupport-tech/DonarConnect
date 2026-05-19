@@ -1,0 +1,18 @@
+.header-left { display:flex; align-items:center; }
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.header-contact { display: flex; flex-direction: column; align-items: flex-end; font-size: 13px; }
+.contact-phone, .contact-email { color: var(--text-sub); text-decoration: none; font-weight: 700; }
+.contact-phone { color: var(--navy); }
+.header-about a { font-size: 13px; color: var(--text-muted); text-decoration: none; }
+.nav-menu { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; border: none; background: rgba(0,0,0,0.04); cursor: pointer; }
+
+/* Desktop adjustments */
+@media (min-width: 768px) {
+  .nav-menu { display: none; }
+  .header-contact { align-items: flex-end; }
+  .header-about { margin-top: 4px; }
+}

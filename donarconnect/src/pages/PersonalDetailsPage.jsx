@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useOrder } from '../hooks/useOrderForm.jsx';
 import StepBar from '../components/StepBar';
 import './FormPage.css';
+import Header from '../components/Header.jsx';
 
 const STATES = [
   'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat',
@@ -66,11 +67,7 @@ export default function PersonalDetailsPage() {
 
   return (
     <div>
-      <header className="page-header">
-        <button className="back-btn" onClick={() => navigate(-1)}>← Back</button>
-        <span className="header-logo">DonarConnect</span>
-        <div style={{ width: 60 }} />
-      </header>
+      <Header />
 
       <StepBar current={1} total={3} />
 

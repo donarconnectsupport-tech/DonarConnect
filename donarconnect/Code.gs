@@ -1,18 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
 //  DonarConnect – Google Apps Script Backend
-//  File: Code.gs
-//
-//  SETUP: See SETUP_GUIDE.md for full instructions.
-//  This script handles all POST requests from the React frontend.
 // ═══════════════════════════════════════════════════════════════
 
-// ── Config (edit these) ─────────────────────────────────────────
-const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID_HERE'; // ← paste your Sheet ID
+const SPREADSHEET_ID = '1KEzolo8AvqEodOMYIJFFBHfFTMeLW3ibhUwTrs_oRp8';
 const SHEET_NAME     = 'Orders';
-const NOTIFY_EMAIL   = 'your@email.com';            // ← your email for new order alerts
-// ────────────────────────────────────────────────────────────────
+const NOTIFY_EMAIL   = 'dheenabau033@gmail.com';
+const SUPPORT_PHONE  = '+91 9597481612';
+const SUPPORT_EMAIL  = 'donar.connect.support@gmail.com';
 
-// Column headers in your Sheet (order matters!)
 const HEADERS = [
   'Order ID', 'Timestamp', 'Full Name', 'Phone', 'Email',
   'Address', 'Pincode', 'City', 'State',
@@ -21,22 +16,11 @@ const HEADERS = [
   'Order Status'
 ];
 
-/**
- * Handle POST requests from the React frontend.
- * The frontend sends JSON with an "action" field.
- */
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
-
-    if (body.action === 'submitOrder') {
-      return handleSubmitOrder(body.data);
-    }
-
-    if (body.action === 'verifyPayment') {
-      return handleVerifyPayment(body.data);
-    }
-
+    if (body.action === 'submitOrder')   return handleSubmitOrder(body.data);
+    if (body.action === 'verifyPayment') return handleVerifyPayment(body.data);
     return jsonResponse({ success: false, message: 'Unknown action' });
   } catch (err) {
     console.error('doPost error:', err);
@@ -44,9 +28,6 @@ function doPost(e) {
   }
 }
 
-/**
- * Handle GET requests (health check / sheet init)
- */
 function doGet(e) {
   if (e.parameter.action === 'init') {
     initSheet();
@@ -55,11 +36,8 @@ function doGet(e) {
   return jsonResponse({ success: true, message: 'DonarConnect API is running' });
 }
 
-// ── Order Submission ─────────────────────────────────────────────
-
 function handleSubmitOrder(data) {
   const sheet = getOrCreateSheet();
-
   const row = [
     data.orderId,
     data.timestamp || new Date().toISOString(),
@@ -80,58 +58,41 @@ function handleSubmitOrder(data) {
     data.upiRef || '',
     data.orderStatus || 'New',
   ];
-
   sheet.appendRow(row);
-
-  // Auto-format the new row
   const lastRow = sheet.getLastRow();
   sheet.getRange(lastRow, 1, 1, row.length).setVerticalAlignment('middle');
-
-  // Color-code by payment status
   colorCodeRow(sheet, lastRow, data.paymentStatus);
-
-  // Send email notification
   try {
     sendOrderNotification(data);
+    sendCustomerConfirmation(data);
   } catch (mailErr) {
     console.warn('Email notification failed:', mailErr);
   }
-
   return jsonResponse({ success: true, orderId: data.orderId, message: 'Order saved' });
 }
 
-// ── Payment Verification ─────────────────────────────────────────
-
 function handleVerifyPayment(data) {
-  // Optional: add Razorpay signature verification here
-  // For now, just update the row status in the sheet
   const sheet = getOrCreateSheet();
   const values = sheet.getDataRange().getValues();
-
   for (let i = 1; i < values.length; i++) {
     if (values[i][0] === data.orderId) {
-      sheet.getRange(i + 1, 15).setValue('Paid');  // Payment Status column
+      sheet.getRange(i + 1, 15).setValue('Paid');
       sheet.getRange(i + 1, 16).setValue(data.razorpayId || '');
       return jsonResponse({ success: true, message: 'Payment verified' });
     }
   }
-
   return jsonResponse({ success: false, message: 'Order not found' });
 }
-
-// ── Sheet Helpers ─────────────────────────────────────────────────
 
 function getOrCreateSheet() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName(SHEET_NAME);
-
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
     initHeaders(sheet);
   } else if (sheet.getLastRow() === 0) {
     initHeaders(sheet);
   }
-
   return sheet;
 }
 
@@ -143,33 +104,22 @@ function initHeaders(sheet) {
   headerRange.setFontWeight('bold');
   headerRange.setFontSize(12);
   sheet.setFrozenRows(1);
-
-  // Set column widths
   const widths = [130, 180, 150, 120, 160, 250, 80, 100, 120, 150, 70, 80, 100, 120, 140, 160, 120, 100];
   widths.forEach((w, i) => sheet.setColumnWidth(i + 1, w));
-
   sheet.setRowHeight(1, 36);
 }
 
-function initSheet() {
-  getOrCreateSheet(); // creates with headers if needed
-}
+function initSheet() { getOrCreateSheet(); }
 
 function colorCodeRow(sheet, rowNum, paymentStatus) {
   const range = sheet.getRange(rowNum, 1, 1, HEADERS.length);
-  if (paymentStatus === 'Paid') {
-    range.setBackground('#e6faf4'); // light green
-  } else if (paymentStatus === 'Pending') {
-    range.setBackground('#fff9db'); // light yellow
-  } else {
-    range.setBackground('#fff5f5'); // light red / UPI unverified
-  }
+  if (paymentStatus === 'Paid')         range.setBackground('#e6faf4');
+  else if (paymentStatus === 'Pending') range.setBackground('#fff9db');
+  else                                  range.setBackground('#fff5f5');
 }
 
-// ── Email Notification ────────────────────────────────────────────
-
 function sendOrderNotification(data) {
-  const subject = `[DonarConnect] New Order #${data.orderId} – ${data.paymentMethod}`;
+  const subject = `[DonarConnect] New Order #${data.orderId} - ${data.paymentMethod}`;
   const body = `
 New order received!
 
@@ -177,8 +127,8 @@ Order ID:        ${data.orderId}
 Name:            ${data.fullName}
 Phone:           ${data.phone}
 Address:         ${data.address}, ${data.city}, ${data.state} - ${data.pincode}
-Product:         ${data.productName} × ${data.quantity}
-Total:           ₹${data.totalAmount}
+Product:         ${data.productName} x ${data.quantity}
+Total:           Rs.${data.totalAmount}
 Payment Method:  ${data.paymentMethod}
 Payment Status:  ${data.paymentStatus}
 Razorpay ID:     ${data.razorpayId || 'N/A'}
@@ -187,15 +137,66 @@ Date:            ${new Date().toLocaleString('en-IN')}
 
 View in sheet: https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}
   `.trim();
-
-  MailApp.sendEmail({
-    to:      NOTIFY_EMAIL,
-    subject: subject,
-    body:    body,
-  });
+  MailApp.sendEmail({ to: NOTIFY_EMAIL, subject: subject, body: body });
 }
 
-// ── Utility ───────────────────────────────────────────────────────
+function sendCustomerConfirmation(data) {
+  if (!data.email) return;
+
+  const subject = `Order Confirmed! #${data.orderId} - DonarConnect`;
+  const codNote = data.paymentMethod === 'COD'
+    ? `\nCASH ON DELIVERY: Please keep Rs.${data.totalAmount} ready when the kit arrives.\n`
+    : '';
+
+  const body = `
+Dear ${data.fullName},
+
+Thank you for your order! Your request has been confirmed and is being processed.
+
+-----------------------------------------
+ORDER DETAILS
+-----------------------------------------
+Order ID       : ${data.orderId}
+Product        : ${data.productName} x ${data.quantity}
+Total Amount   : Rs.${data.totalAmount}
+Payment Method : ${data.paymentMethod}
+Payment Status : ${data.paymentStatus}
+Date           : ${new Date().toLocaleString('en-IN')}
+-----------------------------------------
+${codNote}
+WHAT HAPPENS NEXT?
+
+1. Your Sample Collection Kit will be dispatched within 1-2 business days.
+2. You will receive an SMS on your registered mobile number once the product is shipped, along with tracking details.
+3. Follow the instructions inside the kit to collect your sample.
+4. Once your sample is screened and approved, you will start earning Rs.35,000 per month!
+
+-----------------------------------------
+NEED HELP?
+-----------------------------------------
+Phone : ${SUPPORT_PHONE}
+Email : ${SUPPORT_EMAIL}
+Hours : Monday - Saturday, 9 AM - 6 PM IST
+
+We are happy to assist you with any questions or concerns.
+-----------------------------------------
+
+Thank you for choosing DonarConnect.
+Together, we are helping build families and changing lives.
+
+Warm regards,
+Team DonarConnect
+Email : ${SUPPORT_EMAIL}
+Phone : ${SUPPORT_PHONE}
+  `.trim();
+
+  MailApp.sendEmail({
+    to:      data.email,
+    subject: subject,
+    body:    body,
+    replyTo: SUPPORT_EMAIL,
+  });
+}
 
 function jsonResponse(data) {
   return ContentService

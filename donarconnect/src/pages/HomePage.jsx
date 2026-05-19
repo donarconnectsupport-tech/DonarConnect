@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
+import Header from '../components/Header.jsx';
 
 const STATS = [
   { label: 'Active Donors', value: '12,450+' },
@@ -20,11 +21,8 @@ export default function HomePage() {
   return (
     <div className="home">
       {/* ── Hero ── */}
+      <Header />
       <header className="home-hero">
-        <div className="home-nav">
-          <span className="header-logo">DonarConnect</span>
-          <button className="nav-menu" aria-label="Menu">☰</button>
-        </div>
 
         <div className="hero-body">
           <div className="hero-text">

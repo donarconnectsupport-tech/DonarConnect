@@ -4,6 +4,7 @@ import { useOrder } from '../hooks/useOrderForm.jsx';
 import StepBar from '../components/StepBar';
 import './FormPage.css';
 import './OrderPage.css';
+import Header from '../components/Header.jsx';
 
 const UNIT_PRICE = 99;
 
@@ -26,11 +27,7 @@ export default function OrderPage() {
 
   return (
     <div>
-      <header className="page-header">
-        <button className="back-btn" onClick={() => navigate(-1)}>← Back</button>
-        <span className="header-logo">DonarConnect</span>
-        <div style={{ width: 60 }} />
-      </header>
+      <Header />
 
       <StepBar current={2} total={3} />
 

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOrder } from '../hooks/useOrderForm.jsx';
 import './ConfirmationPage.css';
+import Header from '../components/Header.jsx';
 
 export default function ConfirmationPage() {
   const navigate = useNavigate();
@@ -21,12 +22,7 @@ export default function ConfirmationPage() {
 
   return (
     <div className="confirm-page">
-      {/* Header */}
-      <header className="page-header">
-        <span style={{ width: 60 }} />
-        <span className="header-logo">DonarConnect</span>
-        <div style={{ width: 60 }} />
-      </header>
+      <Header />
 
       <div className="page-content text-center">
         {/* Success animation */}

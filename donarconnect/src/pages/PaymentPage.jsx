@@ -6,6 +6,7 @@ import { openRazorpay } from '../utils/razorpay';
 import StepBar from '../components/StepBar';
 import './FormPage.css';
 import './PaymentPage.css';
+import Header from '../components/Header.jsx';
 
 const UPI_ID = import.meta.env.VITE_UPI_ID || 'yourname@upi';      // ← set in .env
 const UPI_NAME = import.meta.env.VITE_UPI_NAME || 'DonarConnect';
@@ -108,11 +109,7 @@ export default function PaymentPage() {
 
   return (
     <div>
-      <header className="page-header">
-        <button className="back-btn" onClick={() => navigate(-1)}>← Back</button>
-        <span className="header-logo">DonarConnect</span>
-        <div style={{ width: 60 }} />
-      </header>
+      <Header />
 
       <StepBar current={3} total={3} />
 

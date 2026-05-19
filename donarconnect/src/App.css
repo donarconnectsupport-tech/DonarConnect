@@ -305,3 +305,10 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 @media (max-width: 480px) {
   .app-container { max-width: 100%; box-shadow: none; }
 }
+
+/* Desktop layout: widen container and show header contact info */
+@media (min-width: 768px) {
+  :root { --max-w: 980px; }
+  .app-container { max-width: var(--max-w); }
+  .page-header { padding: 0 28px; }
+}
