@@ -8,6 +8,7 @@ export function OrderProvider({ children }) {
     fullName:      '',
     phone:         '',
     email:         '',
+    dob:           '',
     address:       '',
     pincode:       '',
     city:          '',

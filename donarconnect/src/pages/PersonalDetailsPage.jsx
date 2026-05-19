@@ -32,6 +32,7 @@ export default function PersonalDetailsPage() {
     fullName: order.fullName,
     phone:    order.phone,
     email:    order.email,
+    dob:      order.dob,
     address:  order.address,
     pincode:  order.pincode,
     city:     order.city,
@@ -87,6 +88,18 @@ export default function PersonalDetailsPage() {
               placeholder="your@email.com"
               value={form.email}
               onChange={set('email')}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Date of Birth</label>
+            <input
+              type="date"
+              className="form-input"
+              value={form.dob}
+              onChange={set('dob')}
+              max={new Date(new Date().setFullYear(new Date().getFullYear() - 21))
+                .toISOString().split('T')[0]}
             />
           </div>
 

@@ -38,6 +38,7 @@ export async function submitOrder(orderData) {
       fullName:      orderData.fullName,
       phone:         orderData.phone,
       email:         orderData.email || '',
+      dob:           orderData.dob || '',
       address:       orderData.address,
       pincode:       orderData.pincode,
       city:          orderData.city,
