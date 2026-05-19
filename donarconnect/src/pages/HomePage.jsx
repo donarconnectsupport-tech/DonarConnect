@@ -59,14 +59,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* ── About ── */}
-      <section className="home-section">
-        <div className="section-chip">About Us</div>
-        <p style={{ color: 'var(--text-sub)', lineHeight: 1.7, marginTop: 8 }}>
-          DonarConnect is a trusted platform that connects healthy donors with families in need.
-          We ensure a safe, confidential and rewarding experience for all our donors.
-        </p>
-      </section>
+      {/* About section removed; accessible via menu → About Us */}
 
       {/* ── Eligibility ── */}
       <section className="home-section eligibility-card">
