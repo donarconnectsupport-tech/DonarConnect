@@ -37,14 +37,8 @@ export default function HomePage() {
             </div>
           </div>
           <div className="hero-img" aria-hidden="true">
-            <div className="hero-avatar">
-              <div className="avatar-circle">
-                <svg viewBox="0 0 120 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <ellipse cx="60" cy="50" rx="28" ry="30" fill="rgba(255,255,255,0.3)"/>
-                  <path d="M10 160 Q60 110 110 160" fill="rgba(255,255,255,0.2)"/>
-                </svg>
-              </div>
-            </div>
+            {/* Replace profile SVG with hero image. Place the provided image at `public/hero.jpg` */}
+            <img src="/hero.jpg" alt="Donor" className="hero-photo" />
           </div>
         </div>
 

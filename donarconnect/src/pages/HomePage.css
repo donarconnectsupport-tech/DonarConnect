@@ -60,16 +60,14 @@
 .pill-amount{ font-size: 22px; font-weight: 800; }
 .pill-label { font-size: 11px; opacity: 0.75; }
 
-.hero-img { flex-shrink: 0; }
-.avatar-circle {
-  width: 100px;
-  height: 130px;
-  background: rgba(255,255,255,0.12);
-  border-radius: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.hero-img { flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
+.hero-photo {
+  width: 160px;
+  height: auto;
+  border-radius: 12px;
+  object-fit: cover;
   border: 1.5px solid rgba(255,255,255,0.2);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.18);
 }
 
 /* Stats */
@@ -160,4 +158,10 @@
   font-size: 13px;
   color: var(--text-muted);
   margin-top: 12px;
+}
+
+@media (min-width: 768px) {
+  .hero-photo { width: 260px; }
+  .hero-text h1 { font-size: 44px; }
+  .hero-body { align-items: center; }
 }
