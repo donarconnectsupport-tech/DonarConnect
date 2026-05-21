@@ -136,13 +136,12 @@ export default function PaymentPage() {
 
         <div className="pay-methods">
           <PayOption
-            id="COD"
-            active={method === 'COD'}
-            onClick={() => setMethod('COD')}
-            icon="🚚"
-            title="Cash on Delivery"
-            desc="Pay when the kit arrives at your door"
-            badge="Recommended"
+            id="UPI"
+            active={method === 'UPI'}
+            onClick={() => setMethod('UPI')}
+            icon="📱"
+            title="Direct UPI"
+            desc={`Pay directly to ${UPI_ID}`}
           />
           <PayOption
             id="RAZORPAY"
@@ -151,15 +150,18 @@ export default function PaymentPage() {
             icon="💳"
             title="Pay Online"
             desc="UPI · Card · Net Banking · Wallet via Razorpay"
-            badge="Instant"
+            badge="Coming Soon"
+            disabled={true}
           />
           <PayOption
-            id="UPI"
-            active={method === 'UPI'}
-            onClick={() => setMethod('UPI')}
-            icon="📱"
-            title="Direct UPI"
-            desc={`Pay directly to ${UPI_ID}`}
+            id="COD"
+            active={method === 'COD'}
+            onClick={() => setMethod('COD')}
+            icon="🚚"
+            title="Cash on Delivery"
+            desc="Pay when the kit arrives at your door"
+            badge="Coming Soon"
+            disabled={true}
           />
         </div>
 
@@ -173,6 +175,15 @@ export default function PaymentPage() {
           {['🔒 100% Secure','✅ SSL Encrypted','🏦 Trusted Payments'].map((t) => (
             <div key={t} className="trust-badge">{t}</div>
           ))}
+        </div>
+
+        <div className="form-row-2 mt-16">
+          <button className="btn btn-outline" onClick={() => navigate('/details')}>
+            Edit Information
+          </button>
+          <button className="btn btn-outline" onClick={() => navigate('/order')}>
+            Adjust Quantity
+          </button>
         </div>
 
         <div className="sticky-cta">
@@ -193,11 +204,12 @@ export default function PaymentPage() {
   );
 }
 
-function PayOption({ id, active, onClick, icon, title, desc, badge }) {
+function PayOption({ id, active, onClick, icon, title, desc, badge, disabled }) {
   return (
     <div
-      className={`pay-option ${active ? 'active' : ''}`}
-      onClick={onClick}
+      className={`pay-option ${active ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
+      onClick={() => !disabled && onClick()}
+      style={{ opacity: disabled ? 0.5 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
       role="radio"
       aria-checked={active}
     >

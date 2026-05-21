@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Header.css';
 
 export default function Header() {
@@ -18,6 +19,7 @@ export default function Header() {
   function openMenu() { setOpen((s) => !s); }
   function openModal(kind) { setModal(kind); setOpen(false); }
   function closeModal() { setModal(null); }
+  const navigate = useNavigate();
 
   return (
     <header className="page-header" ref={wrapRef}>
@@ -30,6 +32,7 @@ export default function Header() {
 
         {open && (
           <div className="menu-dropdown" role="menu">
+            <button className="menu-item" onClick={() => { setOpen(false); navigate('/'); }}>Home</button>
             <button className="menu-item" onClick={() => openModal('contact')}>Contact Us</button>
             <button className="menu-item" onClick={() => openModal('about')}>About Us</button>
           </div>

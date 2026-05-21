@@ -6,11 +6,7 @@ import './FormPage.css';
 import Header from '../components/Header.jsx';
 
 const STATES = [
-  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat',
-  'Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh',
-  'Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab',
-  'Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh',
-  'Uttarakhand','West Bengal','Delhi','Jammu and Kashmir','Ladakh','Puducherry',
+  'Tamil Nadu', 'Puducherry', 'Kerala', 'Karnataka', 'Andhra Pradesh', 'Telangana'
 ];
 
 function validate(fields) {
@@ -21,12 +17,29 @@ function validate(fields) {
   if (!/^\d{6}$/.test(fields.pincode)) err.pincode = 'Enter valid 6-digit pincode';
   if (!fields.city.trim())         err.city = 'City is required';
   if (!fields.state)               err.state = 'Select your state';
+  if (!fields.dob) {
+    err.dob = 'Date of birth is required';
+  } else {
+    const dob = new Date(fields.dob);
+    if (isNaN(dob.getTime())) {
+      err.dob = 'Enter a valid date of birth';
+    } else {
+      const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+      if (age < 21 || age > 40) err.dob = 'Age must be between 21 and 40 years';
+    }
+  }
   return err;
 }
 
 export default function PersonalDetailsPage() {
   const navigate = useNavigate();
   const { order, updateOrder } = useOrder();
+
+  // DOB bounds: users must be between 21 and 40 years old
+  const _today = new Date();
+  const _maxDOB = new Date(_today.getFullYear() - 21, _today.getMonth(), _today.getDate());
+  const _minDOB = new Date(_today.getFullYear() - 40, _today.getMonth(), _today.getDate());
+  const _toISO = (d) => d.toISOString().split('T')[0];
 
   const [form, setForm] = useState({
     fullName: order.fullName,
@@ -98,9 +111,10 @@ export default function PersonalDetailsPage() {
               className="form-input"
               value={form.dob}
               onChange={set('dob')}
-              max={new Date(new Date().setFullYear(new Date().getFullYear() - 21))
-                .toISOString().split('T')[0]}
+              min={_toISO(_minDOB)}
+              max={_toISO(_maxDOB)}
             />
+            {errors.dob && <span className="form-error">{errors.dob}</span>}
           </div>
 
           {field('address', 'Full Address', 'text', 'Door no., Street, Area')}

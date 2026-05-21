@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { OrderProvider } from './hooks/useOrderForm.jsx'
+import ScrollToTop from './components/ScrollToTop'
 import HomePage from './pages/HomePage'
 import PersonalDetailsPage from './pages/PersonalDetailsPage'
 import OrderPage from './pages/OrderPage'
@@ -11,6 +12,7 @@ function App() {
   return (
     <Router>
       <OrderProvider>
+        <ScrollToTop />
         <div className="app-container">
           <Routes>
             <Route path="/"             element={<HomePage />} />

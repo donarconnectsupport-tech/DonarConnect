@@ -60,7 +60,6 @@ export default function HomePage() {
 
       {/* About section removed; accessible via menu → About Us */}
 
-      {/* ── Eligibility ── */}
       <section className="home-section eligibility-card">
         <div className="flex gap-8" style={{ alignItems: 'center' }}>
           <span style={{ fontSize: 22 }}>🩺</span>

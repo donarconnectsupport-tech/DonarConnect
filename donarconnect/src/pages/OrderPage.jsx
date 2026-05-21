@@ -12,6 +12,7 @@ export default function OrderPage() {
   const navigate = useNavigate();
   const { order, updateOrder } = useOrder();
   const [qty, setQty] = useState(order.quantity || 1);
+  const [showKitInfo, setShowKitInfo] = useState(false);
 
   const total = qty * UNIT_PRICE;
 
@@ -36,18 +37,61 @@ export default function OrderPage() {
         <p className="form-subtitle">Review your order before payment.</p>
 
         {/* Kit card */}
-        <div className="kit-card mt-16">
-          <div className="kit-icon-box">
-            <span style={{ fontSize: 48 }}>🧪</span>
+        <div className="kit-card mt-16 kit-card-image">
+          <div className="kit-image-wrap">
+            <img
+              src="/product.jpeg"
+              alt="DonarConnect Sample Collection Kit"
+              className="kit-image"
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo192.svg'; }}
+            />
           </div>
           <div className="kit-info">
             <h3>Sample Collection Kit</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 4 }}>
-              Sterile, discreet delivery to your address
+              Sterile, discreet delivery to your address.
             </p>
             <div className="kit-price">₹{UNIT_PRICE} <span>per kit</span></div>
+            <button className="btn btn-outline kit-info-btn" onClick={() => setShowKitInfo(true)}>
+              View Product Info
+            </button>
           </div>
         </div>
+
+        {showKitInfo && (
+          <div className="modal-backdrop" onClick={() => setShowKitInfo(false)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <h3>Sample Collection Kit Info</h3>
+              <p style={{ color: 'var(--text-sub)', lineHeight: 1.7 }}>
+                The DonarConnect sample collection kit includes a sterile container, sealed return packaging, and detailed instructions to collect and ship your sample safely.
+              </p>
+              <div className="kit-info-grid">
+                <div>
+                  <strong>How to collect sample</strong>
+                  <ol>
+                    <li>Wash your hands thoroughly.</li>
+                    <li>Collect the sample in the container.</li>
+                    <li>Close the lid tightly.</li>
+                    <li>Place the kit in the return box and seal it.</li>
+                    <li>Our partner will pick it up.</li>
+                  </ol>
+                </div>
+                <div>
+                  <strong>Kit benefits</strong>
+                  <ul>
+                    <li>Leak proof</li>
+                    <li>Sterile &amp; easy to use</li>
+                    <li>Confidential handling</li>
+                    <li>Home collection support</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="modal-actions" style={{ justifyContent: 'flex-end' }}>
+                <button className="btn btn-outline" onClick={() => setShowKitInfo(false)}>Close</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* What's included */}
         <div className="card mt-16">
@@ -106,6 +150,12 @@ export default function OrderPage() {
             onClick={() => navigate('/details')}
           >
             Edit Address →
+          </button>
+        </div>
+
+        <div className="form-row-2 mt-16">
+          <button className="btn btn-outline" onClick={() => navigate('/details')}>
+            Edit Personal Details
           </button>
         </div>
 
