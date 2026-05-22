@@ -9,7 +9,7 @@ const SUPPORT_PHONE  = '+91 9597481612';
 const SUPPORT_EMAIL  = 'donar.connect.support@gmail.com';
 
 const HEADERS = [
-  'Order ID', 'Timestamp', 'Full Name', 'Phone', 'Email','DOB',
+  'Order ID', 'Timestamp', 'Full Name', 'Phone', 'Email', 'DOB',
   'Address', 'Pincode', 'City', 'State',
   'Product', 'Quantity', 'Unit Price', 'Total Amount',
   'Payment Method', 'Payment Status', 'Razorpay ID', 'UPI Ref',
@@ -18,7 +18,20 @@ const HEADERS = [
 
 function doPost(e) {
   try {
-    const body = JSON.parse(e.postData.contents);
+    // Log raw incoming POST for debugging (may be helpful if client sends unexpected content-type)
+    try {
+      Logger.log('doPost raw body: %s', e.postData && e.postData.contents ? e.postData.contents : JSON.stringify(e));
+    } catch (logErr) { /* ignore logging errors */ }
+
+    let body;
+    if (e.postData && e.postData.contents) {
+      body = JSON.parse(e.postData.contents);
+    } else {
+      // Fallback: read parameters object
+      body = { action: e.parameter && e.parameter.action, data: e.parameter };
+    }
+    // Save a short request log for troubleshooting
+    try { logRequest(body); } catch (ignored) {}
     if (body.action === 'submitOrder')   return handleSubmitOrder(body.data);
     if (body.action === 'verifyPayment') return handleVerifyPayment(body.data);
     return jsonResponse({ success: false, message: 'Unknown action' });
@@ -105,7 +118,7 @@ function initHeaders(sheet) {
   headerRange.setFontWeight('bold');
   headerRange.setFontSize(12);
   sheet.setFrozenRows(1);
-  const widths = [130, 180, 150, 120, 160, 250, 80, 100, 120, 150, 70, 80, 100, 120, 140, 160, 120, 100];
+  const widths = [130, 180, 150, 120, 160, 110, 250, 80, 100, 120, 150, 70, 80, 100, 120, 140, 160, 120, 100];
   widths.forEach((w, i) => sheet.setColumnWidth(i + 1, w));
   sheet.setRowHeight(1, 36);
 }
@@ -119,135 +132,146 @@ function colorCodeRow(sheet, rowNum, paymentStatus) {
   else                                  range.setBackground('#fff5f5');
 }
 
+// ── Admin Notification (plain text is fine for internal) ──────────
+
 function sendOrderNotification(data) {
-  const subject = `[DonarConnect] New Order #${data.orderId} - ${data.paymentMethod}`;
+  const subject = '[DonarConnect] New Order #' + data.orderId + ' - ' + data.paymentMethod;
   const body = `
 New order received!
 
-Order ID:        ${data.orderId}
-Name:            ${data.fullName}
-DOB:             ${data.dob || 'N/A'}   
-Phone:           ${data.phone}
-Address:         ${data.address}, ${data.city}, ${data.state} - ${data.pincode}
-Product:         ${data.productName} x ${data.quantity}
-Total:           Rs.${data.totalAmount}
-Payment Method:  ${data.paymentMethod}
-Payment Status:  ${data.paymentStatus}
-Razorpay ID:     ${data.razorpayId || 'N/A'}
-UPI Ref:         ${data.upiRef || 'N/A'}
-Date:            ${new Date().toLocaleString('en-IN')}
+Order ID        : ${data.orderId}
+Name            : ${data.fullName}
+DOB             : ${data.dob || 'N/A'}
+Phone           : ${data.phone}
+Email           : ${data.email || 'N/A'}
+Address         : ${data.address}, ${data.city}, ${data.state} - ${data.pincode}
+Product         : ${data.productName} x ${data.quantity}
+Total           : Rs.${data.totalAmount}
+Payment Method  : ${data.paymentMethod}
+Payment Status  : ${data.paymentStatus}
+Razorpay ID     : ${data.razorpayId || 'N/A'}
+UPI Ref         : ${data.upiRef || 'N/A'}
+Date            : ${new Date().toLocaleString('en-IN')}
 
 View in sheet: https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}
   `.trim();
   MailApp.sendEmail({ to: NOTIFY_EMAIL, subject: subject, body: body });
 }
 
-function sendCustomerConfirmation(data) {
-  if (!data.email) return;
+// ── Customer Confirmation (styled HTML email) ─────────────────────
 
-  const subject = `Order Confirmed! #${data.orderId} - DonarConnect`;
-  
+function sendCustomerConfirmation(data) {
+  const email = (data.email || '').toString().trim();
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    console.warn('sendCustomerConfirmation: invalid or missing email, skipping customer mail:', email);
+    return;
+  }
+
+  const subject = 'Order Confirmed! #' + data.orderId + ' - DonarConnect';
+
+  const codBanner = data.paymentMethod === 'COD' ? `
+    <tr>
+      <td style="padding:16px 32px;">
+        <div style="background:#fff8e1;border-left:4px solid #f9a825;border-radius:6px;padding:14px 18px;font-size:14px;color:#5d4037;">
+          <strong>💵 Cash on Delivery Reminder:</strong> Please keep <strong>Rs.${data.totalAmount}</strong> ready when the kit arrives at your doorstep.
+        </div>
+      </td>
+    </tr>` : '';
+
   const htmlBody = `
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-    .header h1 { margin: 0; font-size: 28px; }
-    .header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }
-    .content { background: white; padding: 30px; }
-    .order-box { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
-    .order-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-    .order-row:last-child { border-bottom: none; }
-    .label { font-weight: bold; color: #666; }
-    .value { color: #333; }
-    .section-title { font-size: 16px; font-weight: bold; color: #667eea; margin-top: 25px; margin-bottom: 15px; }
-    .next-steps { background: #e8f5e9; padding: 15px; border-radius: 6px; margin: 20px 0; }
-    .next-steps ol { margin: 10px 0; padding-left: 20px; }
-    .next-steps li { margin: 8px 0; }
-    .support-box { background: #fff3e0; padding: 15px; border-radius: 6px; margin: 20px 0; }
-    .support-box strong { color: #e65100; }
-    .footer { background: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #999; border-radius: 0 0 8px 8px; }
-    .footer p { margin: 5px 0; }
-    .btn { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 10px 0; }
-    .highlight { color: #667eea; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>✓ Order Confirmed</h1>
-      <p>Your order #${data.orderId} has been received</p>
-    </div>
-    
-    <div class="content">
-      <p>Dear <span class="highlight">${data.fullName}</span>,</p>
-      <p>Thank you for choosing <strong>DonarConnect</strong>! Your order has been confirmed and is being processed. We're excited to help you become a life-saving donor.</p>
-      
-      <div class="section-title">📦 ORDER DETAILS</div>
-      <div class="order-box">
-        <div class="order-row">
-          <span class="label">Order ID</span>
-          <span class="value">${data.orderId}</span>
-        </div>
-        <div class="order-row">
-          <span class="label">Product</span>
-          <span class="value">${data.productName} × ${data.quantity}</span>
-        </div>
-        <div class="order-row">
-          <span class="label">Total Amount</span>
-          <span class="value" style="font-size: 18px; font-weight: bold; color: #667eea;">₹${data.totalAmount}</span>
-        </div>
-        <div class="order-row">
-          <span class="label">Payment Method</span>
-          <span class="value">${data.paymentMethod}</span>
-        </div>
-        <div class="order-row">
-          <span class="label">Payment Status</span>
-          <span class="value" style="color: #4caf50; font-weight: bold;">✓ ${data.paymentStatus}</span>
-        </div>
-        <div class="order-row">
-          <span class="label">Order Date</span>
-          <span class="value">${new Date().toLocaleString('en-IN')}</span>
-        </div>
-      </div>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f7fb;font-family:'Segoe UI',Arial,sans-serif;">
 
-      <div class="section-title">🚀 WHAT HAPPENS NEXT?</div>
-      <div class="next-steps">
-        <ol>
-          <li><strong>Kit Dispatch:</strong> Your Sample Collection Kit will be dispatched within <strong>1-2 business days</strong></li>
-          <li><strong>Tracking Update:</strong> You'll receive an SMS with tracking details</li>
-          <li><strong>Sample Collection:</strong> Follow the simple instructions in the kit to collect your sample</li>
-          <li><strong>Screening & Earning:</strong> Once approved, start earning <strong>₹35,000/month</strong>!</li>
-        </ol>
-      </div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
 
-      <div class="section-title">💬 NEED HELP?</div>
-      <div class="support-box">
-        <p><strong>Customer Support</strong></p>
-        <p>📞 Phone: ${SUPPORT_PHONE}</p>
-        <p>📧 Email: ${SUPPORT_EMAIL}</p>
-        <p>⏰ Hours: Monday - Saturday, 9 AM - 6 PM IST</p>
-        <p style="margin-top: 10px; font-size: 12px;">We're here to help with any questions or concerns!</p>
-      </div>
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#1a3a6b 0%,#2451a0 100%);padding:36px 32px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:800;letter-spacing:-0.5px;">DonarConnect</h1>
+            <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:14px;">Earn Money. Help Build Families.</p>
+          </td>
+        </tr>
 
-      <p style="margin-top: 30px; text-align: center; color: #999; font-size: 13px;">
-        View your order in our dashboard: <a href="https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}" style="color: #667eea; text-decoration: none;">Click here</a>
-      </p>
-    </div>
-    
-    <div class="footer">
-      <p><strong>DonarConnect</strong></p>
-      <p>Together, we are helping build families and changing lives.</p>
-      <p style="margin-top: 15px; color: #ccc;">© 2026 DonarConnect. All rights reserved.</p>
-    </div>
-  </div>
+        <!-- Success badge -->
+        <tr>
+          <td style="padding:32px 32px 0;text-align:center;">
+            <div style="display:inline-block;background:#e6faf4;border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:16px;">✅</div>
+            <h2 style="margin:0;color:#1a3a6b;font-size:22px;font-weight:800;">Order Confirmed!</h2>
+            <p style="margin:8px 0 0;color:#718096;font-size:15px;">Hi <strong>${data.fullName}</strong>, your order has been received and is being processed.</p>
+          </td>
+        </tr>
+
+        <!-- COD banner if applicable -->
+        ${codBanner}
+
+        <!-- Order details -->
+        <tr>
+          <td style="padding:24px 32px 0;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8faff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
+              <tr>
+                <td colspan="2" style="background:#1a3a6b;padding:12px 20px;">
+                  <span style="color:#ffffff;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">Order Details</span>
+                </td>
+              </tr>
+              ${row('Order ID', '<strong style="color:#1a3a6b;">' + data.orderId + '</strong>')}
+              ${row('Product', data.productName + ' &times; ' + data.quantity)}
+              ${row('Total Amount', '<strong style="color:#1a3a6b;font-size:16px;">Rs.' + data.totalAmount + '</strong>')}
+              ${row('Payment Method', data.paymentMethod)}
+              ${row('Payment Status', statusBadge(data.paymentStatus))}
+              ${row('Order Date', new Date().toLocaleString('en-IN'))}
+            </table>
+          </td>
+        </tr>
+
+        <!-- What's next -->
+        <tr>
+          <td style="padding:24px 32px 0;">
+            <h3 style="margin:0 0 16px;color:#1a3a6b;font-size:16px;font-weight:700;">📦 What Happens Next?</h3>
+            ${step('1', '#00c896', 'Kit Dispatched', 'Your Sample Collection Kit will be dispatched within 1–2 business days.')}
+            ${step('2', '#2451a0', 'SMS Notification', 'You will receive an SMS on your registered mobile number once your order is shipped, along with tracking details.')}
+            ${step('3', '#f6ad55', 'Collect Sample', 'Follow the easy instructions inside the kit to collect your sample.')}
+            ${step('4', '#e53e3e', 'Start Earning', 'Once your sample is screened and approved, you will start earning Rs.35,000 per month!')}
+          </td>
+        </tr>
+
+        <!-- Support -->
+        <tr>
+          <td style="padding:24px 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4fc;border-radius:12px;border:1px solid #c5deff;padding:20px;">
+              <tr>
+                <td style="padding:20px;">
+                  <h3 style="margin:0 0 12px;color:#1a3a6b;font-size:15px;font-weight:700;">🙋 Need Help?</h3>
+                  <p style="margin:0 0 8px;font-size:14px;color:#4a5568;">📞 &nbsp;<a href="tel:+919597481612" style="color:#1a3a6b;text-decoration:none;font-weight:600;">${SUPPORT_PHONE}</a></p>
+                  <p style="margin:0 0 8px;font-size:14px;color:#4a5568;">📧 &nbsp;<a href="mailto:${SUPPORT_EMAIL}" style="color:#1a3a6b;text-decoration:none;font-weight:600;">${SUPPORT_EMAIL}</a></p>
+                  <p style="margin:0;font-size:13px;color:#718096;">⏰ &nbsp;Monday – Saturday, 9 AM – 6 PM IST</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#1a3a6b;padding:24px 32px;text-align:center;">
+            <p style="margin:0;color:rgba(255,255,255,0.9);font-size:14px;font-weight:600;">Thank you for choosing DonarConnect</p>
+            <p style="margin:6px 0 0;color:rgba(255,255,255,0.6);font-size:12px;">Together, we are helping build families and changing lives.</p>
+            <p style="margin:12px 0 0;color:rgba(255,255,255,0.5);font-size:11px;">
+              &copy; ${new Date().getFullYear()} DonarConnect &nbsp;|&nbsp;
+              <a href="mailto:${SUPPORT_EMAIL}" style="color:rgba(255,255,255,0.6);text-decoration:none;">${SUPPORT_EMAIL}</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+
 </body>
-</html>
-  `.trim();
+</html>`;
 
   MailApp.sendEmail({
     to:       data.email,
@@ -257,8 +281,61 @@ function sendCustomerConfirmation(data) {
   });
 }
 
+// ── Email helper functions ────────────────────────────────────────
+
+function row(label, value) {
+  return `
+    <tr>
+      <td style="padding:10px 20px;font-size:13px;color:#718096;border-bottom:1px solid #e2e8f0;width:40%;">${label}</td>
+      <td style="padding:10px 20px;font-size:14px;color:#1a202c;border-bottom:1px solid #e2e8f0;">${value}</td>
+    </tr>`;
+}
+
+function statusBadge(status) {
+  const isPaid = status === 'Paid' || status.startsWith('Paid');
+  const bg    = isPaid ? '#e6faf4' : '#fff9db';
+  const color = isPaid ? '#00a97e' : '#c05911';
+  return '<span style="background:' + bg + ';color:' + color + ';padding:3px 10px;border-radius:100px;font-size:12px;font-weight:700;">' + status + '</span>';
+}
+
+function step(num, color, title, desc) {
+  return `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+      <tr>
+        <td style="width:36px;vertical-align:top;padding-top:2px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:${color};color:#fff;font-size:13px;font-weight:700;text-align:center;line-height:28px;">${num}</div>
+        </td>
+        <td style="padding-left:12px;">
+          <div style="font-size:14px;font-weight:700;color:#1a202c;">${title}</div>
+          <div style="font-size:13px;color:#718096;margin-top:2px;">${desc}</div>
+        </td>
+      </tr>
+    </table>`;
+}
+
+// ── Utility ───────────────────────────────────────────────────────
+
 function jsonResponse(data) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Append incoming request details to a small Logs sheet for debugging
+function logRequest(body) {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    let sheet = ss.getSheetByName('RequestsLog');
+    if (!sheet) {
+      sheet = ss.insertSheet('RequestsLog');
+      sheet.getRange(1,1,1,3).setValues([['Timestamp','Action','Payload']]);
+      sheet.setFrozenRows(1);
+    }
+    const ts = new Date().toISOString();
+    const action = (body && body.action) || 'unknown';
+    const payload = JSON.stringify(body && body.data ? body.data : body);
+    sheet.appendRow([ts, action, payload]);
+  } catch (err) {
+    console.warn('logRequest failed:', err);
+  }
 }

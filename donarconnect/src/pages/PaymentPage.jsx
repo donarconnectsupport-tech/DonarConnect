@@ -20,6 +20,15 @@ export default function PaymentPage() {
 
   const amount = order.totalAmount || order.quantity * order.unitPrice;
 
+  // Validate DOB: required and user must be between 21 and 40 years old
+  const isValidDOB = (dob) => {
+    if (!dob) return false;
+    const d = new Date(dob);
+    if (isNaN(d.getTime())) return false;
+    const age = Math.floor((Date.now() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+    return age >= 21 && age <= 40;
+  };
+
   // ── Handlers ─────────────────────────────────────────────
 
   async function handleCOD() {
@@ -99,6 +108,12 @@ export default function PaymentPage() {
 
   function handleProceed() {
     if (!method) { setError('Please select a payment method.'); return; }
+    // Enforce DOB is set and valid before submitting any payment/order
+    if (!isValidDOB(order.dob)) {
+      setError('Please complete your Date of Birth in Personal Details (age 21–40).');
+      navigate('/details');
+      return;
+    }
     setError('');
     if (method === 'COD')      handleCOD();
     if (method === 'RAZORPAY') handleRazorpay();

@@ -33,7 +33,7 @@ export default function Header() {
         {open && (
           <div className="menu-dropdown" role="menu">
             <button className="menu-item" onClick={() => { setOpen(false); navigate('/'); }}>Home</button>
-            <button className="menu-item" onClick={() => openModal('contact')}>Contact Us</button>
+            <button className="menu-item" onClick={() => openModal('contact')}>WhatsApp / Contact Us</button>
             <button className="menu-item" onClick={() => openModal('about')}>About Us</button>
           </div>
         )}
@@ -42,8 +42,8 @@ export default function Header() {
       {modal === 'contact' && (
         <div className="modal-backdrop" onClick={closeModal}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Contact Us</h3>
-            <p><strong>Phone:</strong> <a href="tel:+919597481612">+91 9597481612</a></p>
+            <h3>WhatsApp Contact</h3>
+            <p><strong>WhatsApp:</strong> <a href="https://wa.me/919597481612" target="_blank" rel="noreferrer">+91 9597481612</a></p>
             <p><strong>Email:</strong> <a href="mailto:donar.connect.support@gmail.com">donar.connect.support@gmail.com</a></p>
             <div className="modal-actions">
               <button className="btn btn-outline" onClick={closeModal}>Close</button>

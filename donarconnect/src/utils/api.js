@@ -57,19 +57,30 @@ export async function submitOrder(orderData) {
       orderStatus:   'New',
     },
   };
-
+  // Helpful debug: log payload before sending so devs can inspect values
   try {
+    console.debug('[submitOrder] payload:', payload);
     const res = await fetch(SCRIPT_URL, {
       method:  'POST',
       headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight
       body:    JSON.stringify(payload),
       redirect: 'follow',
     });
-    const json = await res.json();
-    return json;
+
+    // Try to parse JSON safely – some deployments may return plain text on error
+    const text = await res.text();
+    try {
+      const json = JSON.parse(text);
+      console.debug('[submitOrder] response:', json);
+      return json;
+    } catch (parseErr) {
+      console.warn('[submitOrder] non-JSON response:', text);
+      if (!res.ok) throw new Error('Server error: ' + text);
+      return { success: true, orderId: orderData.orderId, message: 'Order saved (unverified response)' };
+    }
   } catch (err) {
     console.error('submitOrder error:', err);
-    throw new Error('Could not reach the server. Please try again.');
+    throw new Error(err.message || 'Could not reach the server. Please try again.');
   }
 }
 

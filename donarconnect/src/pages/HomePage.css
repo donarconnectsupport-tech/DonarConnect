@@ -38,17 +38,23 @@
 }
 
 .hero-body {
+  position: relative;
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 24px 0 16px;
   gap: 12px;
+  padding-right: 320px;
+}
+.hero-text {
+  max-width: 640px;
 }
 .hero-text h1 { font-size: 32px; font-weight: 800; line-height: 1.15; }
 .hero-text p  { font-size: 13px; opacity: 0.8; margin-top: 8px; }
 .earning-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   background: rgba(255,255,255,0.15);
   border: 1px solid rgba(255,255,255,0.25);
@@ -57,12 +63,20 @@
   margin-top: 16px;
 }
 .pill-icon  { font-size: 20px; font-weight: 800; }
-.pill-amount{ font-size: 22px; font-weight: 800; }
+.pill-amount{ font-size: 22px; font-weight: 800; color: #4ade80; }
 .pill-label { font-size: 11px; opacity: 0.75; }
 
-.hero-img { flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
+.hero-img {
+  position: absolute;
+  top: 24px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
 .hero-photo {
-  width: 220px;
+  width: 260px;
   max-width: 100%;
   height: auto;
   border-radius: 16px;
@@ -73,14 +87,27 @@
 
 @media (max-width: 768px) {
   .hero-body {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+    position: relative;
+    padding-right: 180px;
+    min-height: 280px;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .hero-img {
+    position: absolute;
+    top: 24px;
+    right: 16px;
+    width: 160px;
+    pointer-events: none;
+  }
+  .earning-pill {
+    margin-left: auto;
+    margin-right: auto;
   }
   .hero-text h1 { font-size: 36px; }
   .hero-photo {
     width: 100%;
-    max-width: 280px;
+    max-width: 100%;
   }
 }
 
