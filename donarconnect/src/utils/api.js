@@ -33,7 +33,8 @@ export async function submitOrder(orderData) {
     action: 'submitOrder',
     data: {
       orderId:       orderData.orderId,
-      timestamp:     new Date().toISOString(),
+      timestamp: new Date().toLocaleString('en-IN', {
+       timeZone: 'Asia/Kolkata'}),
       // Personal details
       fullName:      orderData.fullName,
       phone:         orderData.phone,
