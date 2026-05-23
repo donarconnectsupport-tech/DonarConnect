@@ -77,33 +77,25 @@ export default function PaymentPage() {
   }
 
   function handleUPI() {
-    // Construct UPI deep-link
+    // Construct UPI deep-link and open the UPI app
     const upiLink = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=DonarConnect+Order`;
     window.location.href = upiLink;
 
-    // After returning, let user confirm manually
-    setTimeout(() => {
-      const ref = window.prompt('Enter your UPI transaction reference (optional):') || '';
-      handleUPIConfirm(ref);
-    }, 2000);
-  }
-
-  async function handleUPIConfirm(ref) {
+    // Do not prompt for a transaction reference; mark order as pending verification
     setLoading(true);
     setError('');
-    try {
-      const orderId = generateOrderId();
-      await submitOrder({ ...order, orderId, paymentMethod: 'UPI',
-                          paymentStatus: ref ? 'Paid (Unverified)' : 'Pending Verification',
-                          upiRef: ref });
-      updateOrder({ orderId, paymentMethod: 'UPI',
-                    paymentStatus: ref ? 'Paid (Unverified)' : 'Pending', upiRef: ref });
-      navigate('/confirmation');
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
+    (async () => {
+      try {
+        const orderId = generateOrderId();
+        await submitOrder({ ...order, orderId, paymentMethod: 'UPI', paymentStatus: 'Pending Verification', upiRef: '' });
+        updateOrder({ orderId, paymentMethod: 'UPI', paymentStatus: 'Pending', upiRef: '' });
+        navigate('/confirmation');
+      } catch (e) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }
 
   function handleProceed() {
