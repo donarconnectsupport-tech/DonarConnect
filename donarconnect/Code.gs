@@ -53,7 +53,7 @@ function handleSubmitOrder(data) {
   const sheet = getOrCreateSheet();
   const row = [
     data.orderId,
-    data.timestamp || new Date().toISOString(),
+    formatTimestampToIST(data.timestamp),
     data.fullName,
     data.phone,
     data.email || '',
@@ -83,6 +83,12 @@ function handleSubmitOrder(data) {
     console.warn('Email notification failed:', mailErr);
   }
   return jsonResponse({ success: true, orderId: data.orderId, message: 'Order saved' });
+}
+
+function formatTimestampToIST(value) {
+  const date = value ? new Date(value) : new Date();
+  const validDate = !isNaN(date.getTime()) ? date : new Date();
+  return Utilities.formatDate(validDate, 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
 }
 
 function handleVerifyPayment(data) {
