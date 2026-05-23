@@ -98,6 +98,39 @@ export default function PaymentPage() {
     })();
   }
 
+  /*
+  // Previously we asked users to enter their UPI transaction reference after returning from the UPI app.
+  // That UX is now disabled; keeping the old implementation commented out for reference.
+  function handleUPI() {
+    const upiLink = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=DonarConnect+Order`;
+    window.location.href = upiLink;
+
+    // After returning, let user confirm manually
+    setTimeout(() => {
+      const ref = window.prompt('Enter your UPI transaction reference (optional):') || '';
+      handleUPIConfirm(ref);
+    }, 2000);
+  }
+
+  async function handleUPIConfirm(ref) {
+    setLoading(true);
+    setError('');
+    try {
+      const orderId = generateOrderId();
+      await submitOrder({ ...order, orderId, paymentMethod: 'UPI',
+                          paymentStatus: ref ? 'Paid (Unverified)' : 'Pending Verification',
+                          upiRef: ref });
+      updateOrder({ orderId, paymentMethod: 'UPI',
+                    paymentStatus: ref ? 'Paid (Unverified)' : 'Pending', upiRef: ref });
+      navigate('/confirmation');
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  */
+
   function handleProceed() {
     if (!method) { setError('Please select a payment method.'); return; }
     // Enforce DOB is set and valid before submitting any payment/order
