@@ -85,12 +85,6 @@ function handleSubmitOrder(data) {
   return jsonResponse({ success: true, orderId: data.orderId, message: 'Order saved' });
 }
 
-function formatTimestampToIST(value) {
-  const date = value ? new Date(value) : new Date();
-  const validDate = !isNaN(date.getTime()) ? date : new Date();
-  return Utilities.formatDate(validDate, 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
-}
-
 function handleVerifyPayment(data) {
   const sheet = getOrCreateSheet();
   const values = sheet.getDataRange().getValues();
@@ -157,7 +151,7 @@ Payment Method  : ${data.paymentMethod}
 Payment Status  : ${data.paymentStatus}
 Razorpay ID     : ${data.razorpayId || 'N/A'}
 UPI Ref         : ${data.upiRef || 'N/A'}
-Date            : ${new Date().toLocaleString('en-IN')}
+  Date            : ${formatTimestampToIST(data.timestamp)}
 
 View in sheet: https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}
   `.trim();
@@ -228,7 +222,7 @@ function sendCustomerConfirmation(data) {
               ${row('Total Amount', '<strong style="color:#1a3a6b;font-size:16px;">Rs.' + data.totalAmount + '</strong>')}
               ${row('Payment Method', data.paymentMethod)}
               ${row('Payment Status', statusBadge(data.paymentStatus))}
-              ${row('Order Date', new Date().toLocaleString('en-IN'))}
+              ${row('Order Date', formatTimestampToIST(data.timestamp))}
             </table>
           </td>
         </tr>
@@ -244,21 +238,40 @@ function sendCustomerConfirmation(data) {
           </td>
         </tr>
 
-        <!-- Support -->
-        <tr>
-          <td style="padding:24px 32px;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4fc;border-radius:12px;border:1px solid #c5deff;padding:20px;">
-              <tr>
-                <td style="padding:20px;">
-                  <h3 style="margin:0 0 12px;color:#1a3a6b;font-size:15px;font-weight:700;">🙋 Need Help?</h3>
-                  <p style="margin:0 0 8px;font-size:14px;color:#4a5568;">📞 &nbsp;<a href="tel:+919597481612" style="color:#1a3a6b;text-decoration:none;font-weight:600;">${SUPPORT_PHONE}</a></p>
-                  <p style="margin:0 0 8px;font-size:14px;color:#4a5568;">📧 &nbsp;<a href="mailto:${SUPPORT_EMAIL}" style="color:#1a3a6b;text-decoration:none;font-weight:600;">${SUPPORT_EMAIL}</a></p>
-                  <p style="margin:0;font-size:13px;color:#718096;">⏰ &nbsp;Monday – Saturday, 9 AM – 6 PM IST</p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+<!-- Support -->
+<tr>
+  <td style="padding:24px 32px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4fc;border-radius:12px;border:1px solid #c5deff;padding:20px;">
+      <tr>
+        <td style="padding:20px;">
+          <h3 style="margin:0 0 12px;color:#1a3a6b;font-size:15px;font-weight:700;">🙋 Need Help?</h3>
+
+          <!-- WhatsApp -->
+          <p style="margin:0 0 8px;font-size:14px;color:#4a5568;">
+            💬 &nbsp;
+            <a href="https://wa.me/919344002422"
+               style="color:#1a3a6b;text-decoration:none;font-weight:600;">
+              ${SUPPORT_PHONE}
+            </a>
+          </p>
+
+          <!-- Email -->
+          <p style="margin:0 0 8px;font-size:14px;color:#4a5568;">
+            📧 &nbsp;
+            <a href="mailto:${SUPPORT_EMAIL}"
+               style="color:#1a3a6b;text-decoration:none;font-weight:600;">
+              ${SUPPORT_EMAIL}
+            </a>
+          </p>
+
+          <p style="margin:0;font-size:13px;color:#718096;">
+            ⏰ &nbsp;Monday – Saturday, 9 AM – 6 PM IST
+          </p>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
 
         <!-- Footer -->
         <tr>
@@ -321,6 +334,17 @@ function step(num, color, title, desc) {
 
 // ── Utility ───────────────────────────────────────────────────────
 
+// Format a timestamp to India Standard Time for consistent storage and display
+function formatTimestampToIST(value) {
+  try {
+    const d = value ? new Date(value) : new Date();
+    if (isNaN(d.getTime())) return Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
+    return Utilities.formatDate(d, 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
+  } catch (err) {
+    return Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd HH:mm:ss');
+  }
+}
+
 function jsonResponse(data) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
@@ -337,7 +361,7 @@ function logRequest(body) {
       sheet.getRange(1,1,1,3).setValues([['Timestamp','Action','Payload']]);
       sheet.setFrozenRows(1);
     }
-    const ts = new Date().toISOString();
+    const ts = formatTimestampToIST();
     const action = (body && body.action) || 'unknown';
     const payload = JSON.stringify(body && body.data ? body.data : body);
     sheet.appendRow([ts, action, payload]);
