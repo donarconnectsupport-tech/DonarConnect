@@ -156,7 +156,7 @@ export default function PaymentPage() {
             onClick={() => setMethod('UPI')}
             icon="📱"
             title="Direct UPI"
-            desc={`Pay directly to ${UPI_ID}`}
+            desc={`Pay directly via UPI`}
           />
           <PayOption
             id="RAZORPAY"

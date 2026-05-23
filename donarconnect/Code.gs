@@ -5,7 +5,7 @@
 const SPREADSHEET_ID = '1KEzolo8AvqEodOMYIJFFBHfFTMeLW3ibhUwTrs_oRp8';
 const SHEET_NAME     = 'Orders';
 const NOTIFY_EMAIL   = 'dheenabau033@gmail.com';
-const SUPPORT_PHONE  = '+91 9597481612';
+const SUPPORT_PHONE  = '+91 9344002422';
 const SUPPORT_EMAIL  = 'donar.connect.support@gmail.com';
 
 const HEADERS = [
