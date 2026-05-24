@@ -221,7 +221,7 @@ function sendCustomerConfirmation(data) {
               ${row('Product', data.productName + ' &times; ' + data.quantity)}
               ${row('Total Amount', '<strong style="color:#1a3a6b;font-size:16px;">Rs.' + data.totalAmount + '</strong>')}
               ${row('Payment Method', data.paymentMethod)}
-              ${row('Payment Status', statusBadge(data.paymentStatus))}
+              ${row('Payment Status', statusBadge(data.paymentStatus) + '<span style="font-size:11px;color:#a0aec0;display:block;margin-top:4px;">Will be confirmed via email</span>')}
               ${row('Order Date', formatTimestampToIST(data.timestamp))}
             </table>
           </td>
@@ -368,4 +368,161 @@ function logRequest(body) {
   } catch (err) {
     console.warn('logRequest failed:', err);
   }
+}
+
+function createSheetTrigger() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  ScriptApp.newTrigger('onSheetEdit')
+    .forSpreadsheet(ss)
+    .onEdit()
+    .create();
+}
+function onSheetEdit(e) {
+  try {
+    const sheet = e.source.getActiveSheet();
+    if (sheet.getName() !== SHEET_NAME) return;
+
+    const editedCol = e.range.getColumn();
+    const editedRow = e.range.getRow();
+    const newValue  = e.value;
+
+    // Column 16 = Payment Status
+    if (editedCol !== 16 || editedRow < 2) return;
+    if (newValue !== 'Completed') return;
+
+    // Get the row data
+    const rowData = sheet.getRange(editedRow, 1, 1, HEADERS.length).getValues()[0];
+
+    const orderData = {
+      orderId:       rowData[0],
+      fullName:      rowData[2],
+      phone:         rowData[3],
+      email:         rowData[4],
+      dob:           rowData[5],
+      address:       rowData[6],
+      pincode:       rowData[7],
+      city:          rowData[8],
+      state:         rowData[9],
+      productName:   rowData[10],
+      quantity:      rowData[11],
+      unitPrice:     rowData[12],
+      totalAmount:   rowData[13],
+      paymentMethod: rowData[14],
+      paymentStatus: newValue,
+    };
+
+    sendPaymentCompletedEmail(orderData);
+
+    // Color the row green
+    sheet.getRange(editedRow, 1, 1, HEADERS.length).setBackground('#e6faf4');
+
+  } catch (err) {
+    console.error('onSheetEdit error:', err);
+  }
+}
+
+function sendPaymentCompletedEmail(data) {
+  if (!data.email) return;
+
+  const subject = 'Payment Confirmed! #' + data.orderId + ' - DonarConnect';
+
+  const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f4f7fb;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fb;padding:32px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#1a3a6b 0%,#2451a0 100%);padding:36px 32px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:800;">DonarConnect</h1>
+            <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:14px;">Earn Money. Help Build Families.</p>
+          </td>
+        </tr>
+
+        <!-- Success -->
+        <tr>
+          <td style="padding:32px 32px 0;text-align:center;">
+            <div style="display:inline-block;background:#e6faf4;border-radius:50%;width:72px;height:72px;line-height:72px;font-size:36px;margin-bottom:16px;">💰</div>
+            <h2 style="margin:0;color:#00a97e;font-size:24px;font-weight:800;">Payment Completed!</h2>
+            <p style="margin:8px 0 0;color:#718096;font-size:15px;">
+              Hi <strong>${data.fullName}</strong>, your payment has been verified and marked as completed.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Order summary -->
+        <tr>
+          <td style="padding:24px 32px 0;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8faff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
+              <tr>
+                <td colspan="2" style="background:#00a97e;padding:12px 20px;">
+                  <span style="color:#ffffff;font-size:13px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">✅ Payment Summary</span>
+                </td>
+              </tr>
+              ${row('Order ID',       '<strong style="color:#1a3a6b;">' + data.orderId + '</strong>')}
+              ${row('Product',        data.productName + ' &times; ' + data.quantity)}
+              ${row('Amount Paid',    '<strong style="color:#00a97e;font-size:16px;">Rs.' + data.totalAmount + '</strong>')}
+              ${row('Payment Method', data.paymentMethod)}
+              ${row('Status',         '<span style="background:#e6faf4;color:#00a97e;padding:3px 10px;border-radius:100px;font-size:12px;font-weight:700;">Completed</span>')}
+            </table>
+          </td>
+        </tr>
+
+        <!-- Message -->
+        <tr>
+          <td style="padding:24px 32px 0;">
+            <div style="background:#f0fff4;border:1px solid #9ae6b4;border-radius:12px;padding:20px;">
+              <p style="margin:0;font-size:15px;color:#276749;font-weight:600;">🎉 You're all set!</p>
+              <p style="margin:8px 0 0;font-size:14px;color:#4a5568;line-height:1.7;">
+                Your payment has been successfully processed. Your Sample Collection Kit is being prepared for dispatch and will be delivered within 3 to 5 days.
+                You will receive an <strong>SMS with tracking details</strong> once your order is shipped.
+              </p>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Support -->
+        <tr>
+          <td style="padding:24px 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4fc;border-radius:12px;border:1px solid #c5deff;">
+              <tr>
+                <td style="padding:20px;">
+                  <h3 style="margin:0 0 12px;color:#1a3a6b;font-size:15px;font-weight:700;">🙋 Need Help?</h3>
+                  <p style="margin:0 0 8px;font-size:14px;color:#4a5568;">💬 &nbsp;<a href="https://wa.me/919344002422" style="color:#1a3a6b;text-decoration:none;font-weight:600;">${SUPPORT_PHONE}</a></p>
+                  <p style="margin:0 0 8px;font-size:14px;color:#4a5568;">📧 &nbsp;<a href="mailto:${SUPPORT_EMAIL}" style="color:#1a3a6b;text-decoration:none;font-weight:600;">${SUPPORT_EMAIL}</a></p>
+                  <p style="margin:0;font-size:13px;color:#718096;">⏰ &nbsp;Monday – Saturday, 9 AM – 6 PM IST</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#1a3a6b;padding:24px 32px;text-align:center;">
+            <p style="margin:0;color:rgba(255,255,255,0.9);font-size:14px;font-weight:600;">Thank you for choosing DonarConnect</p>
+            <p style="margin:6px 0 0;color:rgba(255,255,255,0.6);font-size:12px;">Together, we are helping build families and changing lives.</p>
+            <p style="margin:12px 0 0;color:rgba(255,255,255,0.5);font-size:11px;">
+              &copy; ${new Date().getFullYear()} DonarConnect &nbsp;|&nbsp;
+              <a href="mailto:${SUPPORT_EMAIL}" style="color:rgba(255,255,255,0.6);text-decoration:none;">${SUPPORT_EMAIL}</a>
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  MailApp.sendEmail({
+    to:       data.email,
+    subject:  subject,
+    htmlBody: htmlBody,
+    replyTo:  SUPPORT_EMAIL,
+  });
 }

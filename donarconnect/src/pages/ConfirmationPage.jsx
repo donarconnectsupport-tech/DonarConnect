@@ -71,7 +71,7 @@ export default function ConfirmationPage() {
         <div className="whats-next mt-16">
           <h4 style={{ marginBottom: 12 }}>What's Next?</h4>
           {[
-            { icon: '📦', text: 'Receive your collection kit (2–5 days)' },
+            { icon: '📦', text: 'Receive your collection kit (3–5 days)' },
             { icon: '🧪', text: 'Provide your sample as instructed' },
             { icon: '🔬', text: 'We will conduct the screening test' },
             { icon: '💰', text: 'Get eligible & start earning ₹35,000' },
@@ -93,7 +93,7 @@ export default function ConfirmationPage() {
         {/* UPI pending */}
         {order.paymentMethod === 'UPI' && !isPaid && (
           <div className="cod-notice mt-16" style={{ borderColor: '#fbd38d', background: '#fffbeb' }}>
-            ⏳ Your UPI payment is pending verification. We'll confirm within 24 hrs.
+            ⏳ Your UPI payment is pending verification. We'll confirm within 24 hrs via email.
           </div>
         )}
 

@@ -88,7 +88,7 @@ export default function PaymentPage() {
       try {
         const orderId = generateOrderId();
         await submitOrder({ ...order, orderId, paymentMethod: 'UPI', paymentStatus: 'Pending Verification', upiRef: '' });
-        updateOrder({ orderId, paymentMethod: 'UPI', paymentStatus: 'Pending', upiRef: '' });
+        updateOrder({ orderId, paymentMethod: 'UPI', paymentStatus: 'Pending (Will be confirmed within 24 hours via Email)', upiRef: '' });
         navigate('/confirmation');
       } catch (e) {
         setError(e.message);
