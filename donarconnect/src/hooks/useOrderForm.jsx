@@ -15,7 +15,7 @@ export function OrderProvider({ children }) {
     state:         '',
     // Order
     quantity:      1,
-    unitPrice:     99,
+    unitPrice:     399,
     productName:   'Sample Collection Kit',
     // Payment (set at checkout)
     paymentMethod: '',
@@ -24,7 +24,7 @@ export function OrderProvider({ children }) {
     upiRef:        '',
     // Generated
     orderId:       '',
-    totalAmount:   99,
+    totalAmount:   399,
   });
 
   const updateOrder = (fields) =>
