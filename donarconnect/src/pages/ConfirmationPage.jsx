@@ -106,8 +106,8 @@ export default function ConfirmationPage() {
 
         <p className="text-muted mt-12" style={{ fontSize: 13 }}>
           Questions? WhatsApp us at{' '}
-          <a href="https://wa.me/919344002422" target="_blank" rel="noreferrer" style={{ color: 'var(--navy)' }}>
-            +91 9344002422
+          <a href="https://wa.me/919944684009" target="_blank" rel="noreferrer" style={{ color: 'var(--navy)' }}>
+            +91 9944684009
           </a>
         </p>
       </div>
