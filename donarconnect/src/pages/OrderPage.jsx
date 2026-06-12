@@ -6,7 +6,7 @@ import './FormPage.css';
 import './OrderPage.css';
 import Header from '../components/Header.jsx';
 
-const UNIT_PRICE = 99;
+const UNIT_PRICE = 399;
 
 export default function OrderPage() {
   const navigate = useNavigate();
@@ -51,7 +51,7 @@ export default function OrderPage() {
             <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 4 }}>
               Sterile, discreet delivery to your address.
             </p>
-            <div className="kit-price">₹{UNIT_PRICE} <span>per kit</span></div>
+            <div className="kit-price">₹{UNIT_PRICE} <span>per kit (Inclusive of lab test charges)</span></div>
             <button className="btn btn-outline kit-info-btn" onClick={() => setShowKitInfo(true)}>
               View Product Info
             </button>
@@ -63,7 +63,7 @@ export default function OrderPage() {
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <h3>Sample Collection Kit Info</h3>
               <p style={{ color: 'var(--text-sub)', lineHeight: 1.7 }}>
-                The DonarConnect sample collection kit includes a sterile container, sealed return packaging, and detailed instructions to collect and ship your sample safely.
+                The DonarConnect sample collection kit includes a sterile container and lab test charges, sealed return packaging, and detailed instructions to collect and ship your sample safely.
               </p>
               <div className="kit-info-grid">
                 <div>
