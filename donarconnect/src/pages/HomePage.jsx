@@ -90,7 +90,7 @@ export default function HomePage() {
         <div className="steps-list mt-12">
           {[
             { n: 1, t: 'Register', d: 'Fill in your personal details' },
-            { n: 2, t: 'Order Kit', d: 'We ship a ₹99 collection kit to you' },
+            { n: 2, t: 'Order Kit', d: 'We ship a ₹399 collection kit to you inclusive of lab test charges' },
             { n: 3, t: 'Provide Sample', d: 'Follow the simple instructions' },
             { n: 4, t: 'Get Paid', d: 'Receive ₹35,000 directly to your account' },
           ].map((step) => (
