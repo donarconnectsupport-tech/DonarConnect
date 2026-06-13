@@ -8,19 +8,20 @@ import './FormPage.css';
 import './PaymentPage.css';
 import Header from '../components/Header.jsx';
 
-const UPI_ID = import.meta.env.VITE_UPI_ID || 'yourname@upi';      // ← set in .env
+const UPI_ID   = import.meta.env.VITE_UPI_ID   || 'dklabs1725@okaxis';
 const UPI_NAME = import.meta.env.VITE_UPI_NAME || 'DonarConnect';
 
 export default function PaymentPage() {
   const navigate = useNavigate();
   const { order, updateOrder } = useOrder();
-  const [method, setMethod] = useState('');
+  const [method, setMethod]   = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
+  const [copied, setCopied]   = useState('');
 
   const amount = order.totalAmount || order.quantity * order.unitPrice;
 
-  // Validate DOB: required and user must be between 21 and 40 years old
+  // ── Validation ────────────────────────────────────────────
   const isValidDOB = (dob) => {
     if (!dob) return false;
     const d = new Date(dob);
@@ -29,7 +30,15 @@ export default function PaymentPage() {
     return age >= 21 && age <= 40;
   };
 
-  // ── Handlers ─────────────────────────────────────────────
+  // ── Copy helper ───────────────────────────────────────────
+  const copyToClipboard = (text, label) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(label);
+      setTimeout(() => setCopied(''), 2000);
+    });
+  };
+
+  // ── Handlers ──────────────────────────────────────────────
 
   async function handleCOD() {
     setLoading(true);
@@ -50,9 +59,8 @@ export default function PaymentPage() {
     setLoading(true);
     setError('');
     const orderId = generateOrderId();
-
     openRazorpay({
-      amount:   amount * 100,   // paise
+      amount:   amount * 100,
       orderId,
       name:     order.fullName,
       phone:    order.phone,
@@ -76,64 +84,47 @@ export default function PaymentPage() {
     });
   }
 
-  function handleUPI() {
-    // Construct UPI deep-link and open the UPI app
-    const upiLink = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=DonarConnect+Order`;
-    window.location.href = upiLink;
-
-    // Do not prompt for a transaction reference; mark order as pending verification
-    setLoading(true);
-    setError('');
-    (async () => {
-      try {
-        const orderId = generateOrderId();
-        await submitOrder({ ...order, orderId, paymentMethod: 'UPI', paymentStatus: 'Pending Verification', upiRef: '' });
-        updateOrder({ orderId, paymentMethod: 'UPI', paymentStatus: 'Pending (Will be confirmed within 24 hours via Email)', upiRef: '' });
-        navigate('/confirmation');
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }
-
-  /*
-  // Previously we asked users to enter their UPI transaction reference after returning from the UPI app.
-  // That UX is now disabled; keeping the old implementation commented out for reference.
-  function handleUPI() {
-    const upiLink = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=DonarConnect+Order`;
-    window.location.href = upiLink;
-
-    // After returning, let user confirm manually
-    setTimeout(() => {
-      const ref = window.prompt('Enter your UPI transaction reference (optional):') || '';
-      handleUPIConfirm(ref);
-    }, 2000);
-  }
-
-  async function handleUPIConfirm(ref) {
+  async function handleGPay() {
     setLoading(true);
     setError('');
     try {
       const orderId = generateOrderId();
-      await submitOrder({ ...order, orderId, paymentMethod: 'UPI',
-                          paymentStatus: ref ? 'Paid (Unverified)' : 'Pending Verification',
-                          upiRef: ref });
-      updateOrder({ orderId, paymentMethod: 'UPI',
-                    paymentStatus: ref ? 'Paid (Unverified)' : 'Pending', upiRef: ref });
-      navigate('/confirmation');
+
+      // Save order first
+      await submitOrder({
+        ...order,
+        orderId,
+        paymentMethod: 'UPI',
+        paymentStatus: 'Pending Verification',
+        upiRef: ''
+      });
+      updateOrder({
+        orderId,
+        paymentMethod: 'UPI',
+        paymentStatus: 'Pending (Will be confirmed within 24 hours via Email)',
+        upiRef: ''
+      });
+
+      // GPay tez:// deep link — works with merchant UPI ID to pre-fill amount
+      const gpayLink = `tez://upi/pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=DonarConnect+Order+${orderId}&tr=${orderId}&mc=0000`;
+
+      // Open GPay
+      window.location.href = gpayLink;
+
+      // Navigate to confirmation after delay (in case GPay redirects back)
+      setTimeout(() => {
+        navigate('/confirmation');
+        setLoading(false);
+      }, 3000);
+
     } catch (e) {
       setError(e.message);
-    } finally {
       setLoading(false);
     }
   }
-  */
 
   function handleProceed() {
     if (!method) { setError('Please select a payment method.'); return; }
-    // Enforce DOB is set and valid before submitting any payment/order
     if (!isValidDOB(order.dob)) {
       setError('Please complete your Date of Birth in Personal Details (age 21–40).');
       navigate('/details');
@@ -142,15 +133,13 @@ export default function PaymentPage() {
     setError('');
     if (method === 'COD')      handleCOD();
     if (method === 'RAZORPAY') handleRazorpay();
-    if (method === 'UPI')      handleUPI();
+    if (method === 'UPI')      handleGPay();
   }
 
   // ── Render ────────────────────────────────────────────────
-
   return (
     <div>
       <Header />
-
       <StepBar current={3} total={3} />
 
       <div className="page-content">
@@ -165,9 +154,7 @@ export default function PaymentPage() {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>Order</div>
-            <div style={{ fontSize: 13, fontWeight: 600, marginTop: 2 }}>
-              {order.quantity}× Kit
-            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, marginTop: 2 }}>{order.quantity}× Kit</div>
           </div>
         </div>
 
@@ -175,14 +162,52 @@ export default function PaymentPage() {
         <h4 style={{ marginTop: 24, marginBottom: 12 }}>Select Payment Method</h4>
 
         <div className="pay-methods">
+
+          {/* GPay / UPI */}
           <PayOption
             id="UPI"
             active={method === 'UPI'}
             onClick={() => setMethod('UPI')}
-            icon="📱"
-            title="Direct UPI"
-            desc={`Pay directly via UPI`}
+            icon="🟢"
+            title="Pay via GPay / UPI"
+            desc="Opens Google Pay with amount pre-filled"
+            badge="Recommended"
           />
+
+          {/* GPay info panel — shown when UPI is selected */}
+          {method === 'UPI' && (
+            <div className="gpay-info-panel">
+              <div className="gpay-info-row">
+                <div>
+                  <div className="gpay-info-label">UPI ID</div>
+                  <div className="gpay-info-value">{UPI_ID}</div>
+                </div>
+                <button
+                  className="copy-btn"
+                  onClick={() => copyToClipboard(UPI_ID, 'upi')}
+                >
+                  {copied === 'upi' ? '✓ Copied' : 'Copy'}
+                </button>
+              </div>
+              <div className="gpay-info-row" style={{ borderTop: '1px solid #e2e8f0', marginTop: 10, paddingTop: 10 }}>
+                <div>
+                  <div className="gpay-info-label">Amount</div>
+                  <div className="gpay-info-value">₹{amount}</div>
+                </div>
+                <button
+                  className="copy-btn"
+                  onClick={() => copyToClipboard(amount.toString(), 'amount')}
+                >
+                  {copied === 'amount' ? '✓ Copied' : 'Copy'}
+                </button>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 10, marginBottom: 0 }}>
+                💡 Clicking "Pay" below will open GPay with the amount pre-filled. If GPay doesn't open, copy the UPI ID and amount manually.
+              </p>
+            </div>
+          )}
+
+          {/* Razorpay - Coming Soon */}
           <PayOption
             id="RAZORPAY"
             active={method === 'RAZORPAY'}
@@ -193,6 +218,8 @@ export default function PaymentPage() {
             badge="Coming Soon"
             disabled={true}
           />
+
+          {/* COD - Coming Soon */}
           <PayOption
             id="COD"
             active={method === 'COD'}
@@ -203,20 +230,20 @@ export default function PaymentPage() {
             badge="Coming Soon"
             disabled={true}
           />
+
         </div>
 
         {/* Error */}
-        {error && (
-          <div className="pay-error mt-16">⚠️ {error}</div>
-        )}
+        {error && <div className="pay-error mt-16">⚠️ {error}</div>}
 
         {/* Trust badges */}
         <div className="trust-row mt-16">
-          {['🔒 100% Secure','✅ SSL Encrypted','🏦 Trusted Payments'].map((t) => (
+          {['🔒 100% Secure', '✅ SSL Encrypted', '🏦 Trusted Payments'].map((t) => (
             <div key={t} className="trust-badge">{t}</div>
           ))}
         </div>
 
+        {/* Edit buttons */}
         <div className="form-row-2 mt-16">
           <button className="btn btn-outline" onClick={() => navigate('/details')}>
             Edit Information
@@ -226,6 +253,7 @@ export default function PaymentPage() {
           </button>
         </div>
 
+        {/* Sticky CTA */}
         <div className="sticky-cta">
           <button
             className="btn btn-primary"
@@ -234,9 +262,11 @@ export default function PaymentPage() {
           >
             {loading
               ? <><div className="spinner" /> Processing…</>
-              : method === 'COD'
-                ? 'Confirm Order (COD)'
-                : `Pay ₹${amount} Securely`}
+              : method === 'UPI'
+                ? `Open GPay & Pay ₹${amount}`
+                : method === 'COD'
+                  ? 'Confirm Order (COD)'
+                  : `Pay ₹${amount} Securely`}
           </button>
         </div>
       </div>
@@ -259,7 +289,13 @@ function PayOption({ id, active, onClick, icon, title, desc, badge, disabled }) 
         <div style={{ fontWeight: 700, fontSize: 15 }}>{title}</div>
         <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>{desc}</div>
       </div>
-      {badge && <span className="badge badge-green">{badge}</span>}
+      {badge && (
+        <span className={`badge ${badge === 'Recommended' ? 'badge-green' : 'badge-orange'}`}>
+          {badge}
+        </span>
+      )}
     </div>
   );
 }
+
+/* ── ADD THESE STYLES TO YOUR PaymentPage.css ── */
