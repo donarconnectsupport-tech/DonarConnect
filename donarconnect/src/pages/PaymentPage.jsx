@@ -106,7 +106,7 @@ export default function PaymentPage() {
       });
 
       // GPay tez:// deep link — works with merchant UPI ID to pre-fill amount
-      const gpayLink = `const gpayLink = `tez://upi/pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=DonarConnect+Order+${orderId}`;`;
+      const gpayLink = `tez://upi/pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=DonarConnect+Order+${orderId}`;`;
 
       // Open GPay
       window.location.href = gpayLink;
