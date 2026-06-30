@@ -65,7 +65,7 @@ export default function HomePage() {
           <span style={{ fontSize: 22 }}>🩺</span>
           <div>
             <h4>Eligibility</h4>
-            <p style={{ color: 'var(--text-sub)', fontSize: 14, marginTop: 2 }}>Age: 21 – 40 years &nbsp;•&nbsp; Good health &nbsp;•&nbsp; BMI 18–35</p>
+            <p style={{ color: 'var(--text-sub)', fontSize: 14, marginTop: 2 }}>Age: 21 – 47 years &nbsp;•&nbsp; Good health &nbsp;•&nbsp; BMI 18–35</p>
           </div>
         </div>
       </section>
