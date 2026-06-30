@@ -25,7 +25,7 @@ function validate(fields) {
       err.dob = 'Enter a valid date of birth';
     } else {
       const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-      if (age < 21 || age > 40) err.dob = 'Age must be between 21 and 40 years';
+      if (age < 21 || age > 47) err.dob = 'Age must be between 21 and 47 years';
     }
   }
   return err;
@@ -38,7 +38,7 @@ export default function PersonalDetailsPage() {
   // DOB bounds: users must be between 21 and 40 years old
   const _today = new Date();
   const _maxDOB = new Date(_today.getFullYear() - 21, _today.getMonth(), _today.getDate());
-  const _minDOB = new Date(_today.getFullYear() - 40, _today.getMonth(), _today.getDate());
+  const _minDOB = new Date(_today.getFullYear() - 47, _today.getMonth(), _today.getDate());
   const _toISO = (d) => d.toISOString().split('T')[0];
 
   const [form, setForm] = useState({
