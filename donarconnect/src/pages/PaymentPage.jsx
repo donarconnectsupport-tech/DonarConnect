@@ -171,7 +171,7 @@ export default function PaymentPage() {
             icon="🟢"
             title="Pay via GPay / UPI"
             desc="Opens Google Pay with amount pre-filled"
-            badge="Recommended"
+            badge="Available"
           />
 
           {/* GPay info panel — shown when UPI is selected */}
@@ -219,7 +219,7 @@ export default function PaymentPage() {
             disabled={true}
           />
 
-          {/* COD - Coming Soon */}
+          {/* COD */}
           <PayOption
             id="COD"
             active={method === 'COD'}
@@ -227,7 +227,7 @@ export default function PaymentPage() {
             icon="🚚"
             title="Cash on Delivery"
             desc="Pay when the kit arrives at your door"
-            badge="Coming Soon"
+            badge="Available"
             disabled={false}
           />
 
