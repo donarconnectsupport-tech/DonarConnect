@@ -228,7 +228,7 @@ export default function PaymentPage() {
             title="Cash on Delivery"
             desc="Pay when the kit arrives at your door"
             badge="Coming Soon"
-            disabled={true}
+            disabled={false}
           />
 
         </div>
