@@ -163,6 +163,18 @@ export default function PaymentPage() {
 
         <div className="pay-methods">
 
+          {/* COD */}
+          <PayOption
+            id="COD"
+            active={method === 'COD'}
+            onClick={() => setMethod('COD')}
+            icon="🚚"
+            title="Cash on Delivery"
+            desc="Pay when the kit arrives at your door"
+            badge="Available"
+            disabled={false}
+          />
+
           {/* GPay / UPI */}
           <PayOption
             id="UPI"
@@ -218,19 +230,7 @@ export default function PaymentPage() {
             badge="Coming Soon"
             disabled={true}
           />
-
-          {/* COD */}
-          <PayOption
-            id="COD"
-            active={method === 'COD'}
-            onClick={() => setMethod('COD')}
-            icon="🚚"
-            title="Cash on Delivery"
-            desc="Pay when the kit arrives at your door"
-            badge="Available"
-            disabled={false}
-          />
-
+          
         </div>
 
         {/* Error */}
